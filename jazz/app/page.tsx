@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
+import { useMutation } from "@tanstack/react-query";
+import { client } from "@/lib/client";
 
 const ANIMALS = [
   "cat",
@@ -32,20 +34,26 @@ export default function Home() {
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-   const main = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if(stored) {
-      setUsername(stored);
-      return
-    }
+    const main = () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setUsername(stored);
+        return;
+      }
 
-    const generated = generateUsername();
-    localStorage.setItem(STORAGE_KEY, generated);
-    setUsername(generated)
-   }
+      const generated = generateUsername();
+      localStorage.setItem(STORAGE_KEY, generated);
+      setUsername(generated);
+    };
 
-   main()
+    main();
   }, []);
+
+  const { mutate: createRoom } = useMutation({
+    mutationFn: async () => {
+      const res = await client.room.create.post();
+    },
+  });
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -54,7 +62,9 @@ export default function Home() {
           <h1 className="text-2xl font-bold tracking-tight text-green-500 animate-pulse ">
             {">"}private_chat 🦉
           </h1>
-          <p className="text-sm text-zinc-500">A private self destructing chat-room</p>
+          <p className="text-sm text-zinc-500">
+            A private self destructing chat-room
+          </p>
         </div>
         <div className="border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-md">
           <div className="space-y-5">
@@ -68,7 +78,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <button className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50 ">
+            <button
+              onClick={() => createRoom()}
+              className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50 "
+            >
               CREATE SECURE ROOM
             </button>
           </div>
