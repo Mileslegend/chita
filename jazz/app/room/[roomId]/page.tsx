@@ -1,5 +1,8 @@
 "use client";
 
+import { useUsername } from "@/hooks/use-username";
+import { client } from "@/lib/client";
+import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -19,6 +22,15 @@ const Page = () => {
 
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const { username } = useUsername();
+
+  //Sending a message
+  const {mutate: sendMessage, isPending} = useMutation({
+    mutationFn: async ({text}: {text: string}) => {
+      await client.messages.post({sender: username, text}, {query: {roomId}})
+    }
+  })
 
   const copyLink = () => {
     const url = window.location.href;
@@ -75,7 +87,7 @@ const Page = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if(e.key === "Enter" && input.trim())  {
-                  // TO DO: Send message to the backend
+                  sendMessage({text: input})
                   inputRef.current?.focus()
                 }
               }}
@@ -85,7 +97,13 @@ const Page = () => {
               className="w-full bg-black border border-zinc-800 focus:border-zinc-700 focus:outline-none transition-colors text-zinc-100 placeholder:text-zinc-700 py-3 pl-8 pr-4 text-sm "
             />
           </div>
-          <button className="bg-zinc-800 text-zinc-400 px-6 text-sm font-bold hover:text-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+          <button 
+          onClick={() => {
+            sendMessage({text: input})
+            inputRef.current?.focus()
+          }}
+          disabled = {!input.trim() || isPending}
+          className="bg-zinc-800 text-zinc-400 px-6 text-sm font-bold hover:text-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
             SEND
           </button>
         </div>
